@@ -1,0 +1,8 @@
+pandas
+numpy
+python-dotenv
+faiss-cpu
+langchain
+langchain-community
+gradio
+langchain_google_genai

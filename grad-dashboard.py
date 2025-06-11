@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
-import os
+
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader
 # from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
-from langchain_chroma import Chroma
+
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
@@ -24,14 +24,7 @@ text_splitter=CharacterTextSplitter(separator="\n",chunk_size=0,chunk_overlap=0)
 documents=text_splitter.split_documents(raw_documents)
 print(f"Number of documents loaded: {len(documents)}")
 
-# try:
-#     db_books = Chroma.from_documents(
-#         documents[:5],
-#         embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=os.getenv("GOOGLE_API_KEY"))
-#     )
-#     print("Chroma DB created with sample documents")
-# except Exception as e:
-#     print(f"An error occurred with sample documents: {e}")
+
 db_books = FAISS.from_documents(
     documents,
     embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -42,9 +35,9 @@ def retrieve_semantic_recommendation(
         category:str=None,
         tone:str =None,
         initial_top_k:int =50,
-        final_top_k:int =16,
+        final_top_k:int =24,
 )-> pd.DataFrame:
-    print("rsr")
+    # print("rsr")
     recs=db_books.similarity_search(query,k=initial_top_k)
     books_list=[int(rec.page_content.strip('"').split()[0]) for rec in recs]
     book_recs=books[books["isbn13"].isin(books_list)].head(final_top_k)
@@ -73,7 +66,7 @@ def recommend_books(
                 category:str,
                 tone:str
 ):
-        print("Inside recommend_books function")
+        # print("Inside recommend_books function")
         recommendations= retrieve_semantic_recommendation(query,category,tone)
         results=[]
 
@@ -112,7 +105,7 @@ with gr.Blocks(theme=gr.themes.Glass()) as dashboard:
         submit_button = gr.Button("Get Recommendations")
     
     gr.Markdown("## Recommendations")
-    output=gr.Gallery(label="Recommend books", columns=8,rows=2)
+    output=gr.Gallery(label="Recommend books", columns=8,rows=3)
 
     submit_button.click(fn=recommend_books,
                         inputs=[user_query,category_dropdown,tone_dropdown],
